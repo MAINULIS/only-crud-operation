@@ -26,6 +26,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const productCollections = client.db('onlyCrudOperation').collection('products');
+    const measureCollection = client.db('onlyCrudOperation').collection('inventory')
     // 1. post operation
     app.post('/products', async(req, res) =>{
         const query = req.body;
@@ -108,6 +109,45 @@ async function run() {
         $set: product
       }
       const result = await productCollections.updateOne(filter, updateDoc);
+      res.send(result);
+    })
+
+    // all inventory
+    // 1.
+    app.post('/all-inventory', async(req,res) => {
+      const query = req.body;
+      const result = await measureCollection.insertOne(query);
+      res.send(result);
+    })
+
+    // 2.
+    app.get('/all-inventory', async(req, res) => {
+      console.log(req.query);
+      // const items = req.query;
+      const {filterBy, q} = req.query;
+      let query = {};
+      if(filterBy && q){
+        query = {
+          // [filterBy] : parseFloat(q) 
+          // or to use less than($lt)/ gether than($gt)
+          [filterBy]: {
+            $gt:parseFloat(q)
+          }
+        }
+      }
+      // if(items.filterBy){
+      //   query = {
+      //     size:{
+      //       h:parseFloat(items.h),
+      //       w: parseFloat(items.w),
+      //       uom:items.uom
+      //     }
+      //   }
+      // }
+
+      console.log("--->",query);
+      const inventory = measureCollection.find(query);
+      const result = await inventory.toArray()
       res.send(result);
     })
 
